@@ -77,3 +77,4 @@ lint/tmp/
 # lint/reports/
 .claude
 /app/libs
+/app/release
