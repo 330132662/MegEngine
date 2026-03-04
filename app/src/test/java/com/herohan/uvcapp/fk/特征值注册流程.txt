@@ -1,0 +1,217 @@
+找到了！这里是完整的注册流程和特征值获取路径：
+
+  人脸注册流程 - 特征值获取完整链路
+
+  流程图
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │  1. 用户点击"录入人脸"按钮                                     │
+  │     MainActivity.java:414                                    │
+  └─────────────────────────┬───────────────────────────────────┘
+                            ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  2. 调用 mFacePass.StartRegister(face_id, 0, 15000)          │
+  │     MainActivity.java:421                                    │
+  │     - face_id: 用户ID                                        │
+  │     - 0: 人脸类型 (1是手掌)                                    │
+  │     - 15000: 超时时间(ms)                                     │
+  └─────────────────────────┬───────────────────────────────────┘
+                            ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  3. NativeLib.java:119 - JNI 调用                            │
+  │     Java_com_example_facepass_NativeLib_StartRegister()     │
+  └─────────────────────────┬───────────────────────────────────┘
+                            ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  4. libfacepass.cpp:455 - JNI 桥接                            │
+  │     → face_pass.c:252 - facePassStartRegister()            │
+  │     - 通过串口发送注册指令到人脸识别设备                        │
+  └─────────────────────────┬───────────────────────────────────┘
+                            ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  5. 人脸识别设备处理                                          │
+  │     - 采集人脸图像                                            │
+  │     - 提取特征值                                              │
+  │     - 通过串口返回特征值                                       │
+  └─────────────────────────┬───────────────────────────────────┘
+                            ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  6. NativeLib.dataCallBack.register_process()                │
+  │     NativeLib.java:42                                       │
+  │     - 从 Native 层接收特征值                                   │
+  └─────────────────────────┬───────────────────────────────────┘
+                            ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  7. MainActivity.OnRegisterMsg() ← 【特征值到达这里】         │
+  │     MainActivity.java:747                                    │
+  │     参数: byte[] ft (特征值)                                  │
+  └─────────────────────────┬───────────────────────────────────┘
+                            ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  8. 保存特征值到本地                                          │
+  │     mUserManager.addUser(face_id, obj_type, name, ft)       │
+  │     MainActivity.java:757                                   │
+  └─────────────────────────┬───────────────────────────────────┘
+                            ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  9. 保存到文件                                                │
+  │     mUserManager.saveBook("/storage/.../Users.dat")         │
+  │     MainActivity.java:772                                   │
+  └─────────────────────────────────────────────────────────────┘
+
+  ---
+  关键代码位置
+
+  1. 录入入口 - MainActivity.java:414-427
+
+  mBinding.buttonFace.setOnClickListener(v->{
+      mFacePass.PauseRecog();
+      int faceid = mUserManager.getLastId();  // 获取下一个可用的ID
+      if(faceid == 0) {
+          Log.v(TAG, "invalid face_id current user cnts:" + mUserManager.getUserCnts());
+      } else {
+          // ← 开始注册，设备将开始采集人脸并返回特征值
+          int ret = mFacePass.StartRegister(faceid, 0, 15000);
+          Log.v(TAG, "start register face:" + faceid + " ret:" + ret);
+          mIsRegister = true;  // 标记为注册状态
+      }
+  });
+
+  2. 特征值接收 - MainActivity.java:747-781
+
+  @Override
+  public void OnRegisterMsg(int ppl_code, int obj_type, int face_id, int time_out, byte[] ft, byte[] rgb_img, byte[] ir_img) {
+      if(mIsRegister == false) return;
+
+      if(ppl_code == 96) {  // 96 = 注册成功
+          // ← ft 就是从设备获取的特征值
+          int ret = mUserManager.addUser(face_id, obj_type,
+              String.format("%d_%s", face_id, obj_type == 0 ? "face" : "palm"), ft);
+
+          if(ret >= 0) {
+              // 保存到本地文件
+              mUserManager.saveBook("/storage/emulated/0/Documents/Users.dat");
+              // 显示"录入成功"
+          }
+      }
+  }
+
+  3. 特征值存储 - UserManager.java:103-111
+
+  public int addUser(int face_id, int type, String name, byte[] feature) {
+      w.lock();
+      // ← 创建用户，保存特征值
+      User user = new User(face_id, name, type, feature);
+      UserMap.put(face_id, user);
+      user_list[face_id] = 1;
+      w.unlock();
+      return 1;
+  }
+
+  4. 从文件加载特征值 - MainActivity.java:307-322
+
+  当设备重启或连接后，会从本地文件加载特征值并同步到设备：
+
+  if(face_cnts != local_face_cnts || palm_cnts != local_palm_cnts) {
+      // 遍历本地所有用户
+      for (int i = 1; i <= mUserManager.getUserCnts(); i++) {
+          user_data = mUserManager.getUserInfo(i);  // ← 获取特征值
+          if (user_data.type == 0 || user_data.type == 1) {
+              // ← 将特征值写入设备
+              mFacePass.InsertFeature(user_data.type, i, user_data.ft);
+          }
+      }
+  }
+
+  ---
+  总结
+  ┌────────────┬───────────────────────┬──────────────────────────────────────┐
+  │    步骤    │         位置          │                 说明                 │
+  ├────────────┼───────────────────────┼──────────────────────────────────────┤
+  │ 开始录入   │ MainActivity.java:421 │ 点击按钮调用 StartRegister()         │
+  ├────────────┼───────────────────────┼──────────────────────────────────────┤
+  │ 设备采集   │ 硬件设备              │ 设备采集人脸并提取特征值             │
+  ├────────────┼───────────────────────┼──────────────────────────────────────┤
+  │ 特征值回调 │ MainActivity.java:747 │ OnRegisterMsg() 接收特征值 byte[] ft │
+  ├────────────┼───────────────────────┼──────────────────────────────────────┤
+  │ 保存到内存 │ UserManager.java:105  │ addUser() 保存到 HashMap             │
+  ├────────────┼───────────────────────┼──────────────────────────────────────┤
+  │ 保存到文件 │ MainActivity.java:772 │ saveBook() 持久化到 Users.dat        │
+  ├────────────┼───────────────────────┼──────────────────────────────────────┤
+  │ 加载特征值 │ MainActivity.java:317 │ getUserInfo() 从文件读取             │
+  ├────────────┼───────────────────────┼──────────────────────────────────────┤
+  │ 写入设备   │ MainActivity.java:320 │ InsertFeature() 同步到设备           │
+  └────────────┴───────────────────────┴──────────────────────────────────────┘
+
+
+
+  根据代码分析，人脸数据同步需要使用以下接口：
+
+  A 机器（导出人脸特征）
+
+  代码位置: facepass/src/main/java/com/example/facepass/NativeLib.java
+
+  在 A 机器录入人脸后，通过以下方式获取特征数据：
+
+  // 1. 录入人脸
+  nativeLib.StartRegister(face_id, obj_type, time_out);
+
+  // 2. 在回调中获取特征数据
+  nativeLib.setFacePassCallBack(new NativeLib.facePassCallBack() {
+      @Override
+      public void OnRegisterMsg(int ppl_code, int obj_type, int face_id,
+                                int time_out, byte[] ft, byte[] rgb_img, byte[] ir_img)
+
+          // ft 就是人脸特征数据，需要保存下来用于同步
+          // face_id 是用户ID
+          // obj_type 是对象类型 (0=人脸, 1=掌纹)
+      }
+  });
+
+  或者通过 AddUserByJpeg 直接从图片获取特征：
+
+  int ret = nativeLib.AddUserByJpeg(face_id, jpegImage);
+  if (ret >= 0) {
+      // 特征数据在 nativeLib.ft 字段中
+      byte[] feature = nativeLib.ft;  // 保存这个特征数据
+      int objType = nativeLib.obj_type;
+  }
+
+  ---
+  B 机器（导入人脸特征）
+
+  在 B 机器上使用 InsertFeature 将特征数据插入：
+
+  // 插入从 A 机器获取的特征数据
+  int groupType = 0;  // 0=人脸组, 1=掌纹组
+  int faceId = 123;   // 用户ID（必须与A机器一致）
+  byte[] feature = ...; // 从A机器获取的特征数据
+
+  int ret = nativeLib.InsertFeature(groupType, faceId, feature);
+
+  ---
+  关键接口说明
+  ┌───────────────┬────────────────────┬────────────────────────────────────────┐
+  │     接口      │        位置        │                  说明                  │
+  ├───────────────┼────────────────────┼────────────────────────────────────────┤
+  │ InsertFeature │ NativeLib.java:122 │ 插入特征数据到指定组                   │
+  ├───────────────┼────────────────────┼────────────────────────────────────────┤
+  │ AddUserByJpeg │ NativeLib.java:130 │ 从JPEG图片添加用户，返回特征在 ft 字段 │
+  ├───────────────┼────────────────────┼────────────────────────────────────────┤
+  │ StartRegister │ NativeLib.java:119 │ 开始注册（通过摄像头）                 │
+  └───────────────┴────────────────────┴────────────────────────────────────────┘
+  ---
+  同步流程
+
+  A机器 (录入)                          B机器 (导入)
+  ────────────────────────────────────────────────────────
+  1. StartRegister/AddUserByJpeg
+  2. 获取 ft[] 特征数据  ──────────────→ 3. InsertFeature(groupType, faceId, ft)
+
+  更新策略
+  1、建立用户表版本号 ，每隔几分钟查询服务器上的版本号 比本地低则从服务器更新用户数据  或下载整个文件 ，后期需要用户量比较大的情况 ，可以考虑增量更新
+  例如 V5 比V4 多了10个用户，V4比V3多1000个用户， 那 V4客户端只需要下载这10个用户的数据 注册到客户端，V3  则需要直接或间接更新到 V5
+  2、建立长链接  只要有用户新注册 直接干到其他机器上
+
+
+

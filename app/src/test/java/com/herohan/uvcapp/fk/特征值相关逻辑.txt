@@ -1,0 +1,111 @@
+已找到接收相机传来的特征值的关键位置。这里是完整的数据流程：
+
+  接收特征值的位置
+
+  1. MainActivity.java - 应用层接收
+
+  文件路径: app/src/main/java/com/herohan/uvcapp/activity/MainActivity.java
+
+  public class MainActivity extends AppCompatActivity implements NativeLib.facePassCallBack
+
+  两个关键回调方法:
+  ┌─────────────────┬─────────┬──────────────┬───────────────────────────────────────────────────┐
+  │      方法       │  行号   │     用途     │                    特征值参数                     │
+  ├─────────────────┼─────────┼──────────────┼───────────────────────────────────────────────────┤
+  │ OnRecogMsg()    │ 640-742 │ 接收识别结果 │ byte[] ft - 特征值, byte[] img - 图像             │
+  ├─────────────────┼─────────┼──────────────┼───────────────────────────────────────────────────┤
+  │ OnRegisterMsg() │ 746-811 │ 接收注册结果 │ byte[] ft - 特征值, byte[] rgb_img, byte[] ir_img │
+  └─────────────────┴─────────┴──────────────┴───────────────────────────────────────────────────┘
+  关键代码 (第640行):
+  @Override
+  public void OnRecogMsg(int ppl_code, int obj_type, int stranger, int top1_id, int iden_score, byte[] ft, byte[] img) {
+      // ft 就是接收到的特征值
+      // ...
+  }
+
+  关键代码 (第746行):
+  @Override
+  public void OnRegisterMsg(int ppl_code, int obj_type, int face_id, int time_out, byte[] ft, byte[] rgb_img, byte[] ir_img) {
+      // ft 就是接收到的特征值
+      // ...
+  }
+
+  ---
+  2. NativeLib.java - JNI 桥接层
+
+  文件路径: facepass/src/main/java/com/example/facepass/NativeLib.java
+
+  接口定义 (第22-26行):
+  public interface facePassCallBack {
+      void OnRecogMsg(int ppl_code, int obj_type, int stranger, int top1_id, int iden_score, byte[] ft, byte[] img);
+      void OnRegisterMsg(int ppl_code, int obj_type, int face_id, int time_out, byte[] ft, byte[] rgb_img, byte[] ir_img);
+      void OnOtaMsg(int process, int err_info, int errInfo);
+  }
+
+  数据回调 (第53-68行):
+  dataCallBack dataCB = new dataCallBack() {
+      @Override
+      public void recog_process(int ppl_code, int obj_type, int stranger, int top1_id, int iden_score, byte[] ft, byte[] img) {
+          dataCallBack.super.recog_process(ppl_code, obj_type, stranger, top1_id, iden_score, ft, img);
+      }
+
+      @Override
+      public void register_process(int ppl_code, int obj_type, int face_id, int time_out, byte[] ft, byte[] rgb_img, byte[] ir_img) {
+          dataCallBack.super.register_process(ppl_code, obj_type, face_id, time_out, ft, rgb_img, ir_img);
+      }
+  };
+
+  ---
+  3. 数据流程图
+
+  ┌─────────────────────────────────────────────────────────┐
+  │          Native 层 (libfacepass.so)                      │
+  │  - 人脸识别算法处理                                       │
+  │  - 特征值提取                                            │
+  └─────────────────┬───────────────────────────────────────┘
+                    │ JNI
+                    ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │          NativeLib.dataCallBack                          │
+  │  - recog_process()    ← 特征值从这里传上来               │
+  │  - register_process() ← 特征值从这里传上来               │
+  └─────────────────┬───────────────────────────────────────┘
+                    │ 调用
+                    ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │          NativeLib.facePassCallBack                      │
+  │  - OnRecogMsg()       ← 接收特征值 byte[] ft             │
+  │  - OnRegisterMsg()    ← 接收特征值 byte[] ft             │
+  └─────────────────┬───────────────────────────────────────┘
+                    │ 实现
+                    ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │          MainActivity                                    │
+  │  实现了 facePassCallBack 接口                             │
+  │  - OnRecogMsg():     识别结果回调 (line 640)             │
+  │  - OnRegisterMsg():  注册结果回调 (line 746)             │
+  └─────────────────────────────────────────────────────────┘
+
+  ---
+  4. 如何使用这些特征值
+
+  在 MainActivity.java 中，特征值 ft 的使用示例:
+
+  保存特征值 (第756行):
+  int ret = mUserManager.addUser(face_id, obj_type, String.format("%d_%s", face_id, obj_type == 0 ? "face" : "palm"), ft);
+
+  加载特征值到设备 (第320行):
+  mFacePass.InsertFeature(user_data.type, i, user_data.ft);
+
+  └─────────────────────────────────────────────────────────┘
+
+  ---
+  4. 如何使用这些特征值
+
+  在 MainActivity.java 中，特征值 ft 的使用示例:
+
+  保存特征值 (第756行):
+  int ret = mUserManager.addUser(face_id, obj_type, String.format("%d_%s", face_id, obj_type == 0 ? "face" : "palm"), ft);
+
+  加载特征值到设备 (第320行):
+  mFacePass.InsertFeature(user_data.type, i, user_data.ft);
