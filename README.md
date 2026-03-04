@@ -11,6 +11,10 @@
 本方案用于 多设备间 人脸登录的实现 ，在A设备录入人脸后  通过后端保存 faceI_id 、特征值ft、featureBytes ，下发到其他符合
 登录权限的设备，通过设备上的SDK (`app/src/main/java/com/herohan/uvcapp/activity/MainActivity.java`的`mFacePass.InsertFeature`)进行用户新增;
 
+demo 速测 https://www.pgyer.com/kuangshi
+码云  https://gitee.com/jeffcat/MegEngine  
+Github https://github.com/330132662/MegEngine  
+
 q1 为什么不用度目类的离线对比？  
 人脸特征值无法同步  ，且很多Android主板不兼容；
 q2 为什么不用百度的云端对比？  
