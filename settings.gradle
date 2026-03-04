@@ -20,7 +20,4 @@
  *  Files in the libjpeg-turbo, libusb, libuvc, rapidjson folder
  *  may have a different license, see the respective files.
  */
-
 include ':app'
-include ':facepass'
-include ':libuvccamera'
