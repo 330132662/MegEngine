@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">旷视人脸</string>
+    <string name="app_name">旷视人脸pub</string>
     <string name="action_control">Controls</string>
     <string name="action_usb">USB</string>
     <string name="action_safely_eject">Safely Eject</string>
