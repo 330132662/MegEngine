@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,7 +16,6 @@ import com.serenegiant.usb.Format;
 import com.serenegiant.usb.Size;
 import com.serenegiant.usb.UVCCamera;
 import com.herohan.uvcapp.R;
-import com.herohan.uvcapp.databinding.FragmentVideoFormatBinding;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -37,7 +37,10 @@ public class VideoFormatDialogFragment extends DialogFragment {
 
     private OnVideoFormatSelectListener mOnVideoFormatSelectListener;
 
-    private FragmentVideoFormatBinding mBinding;
+    private View mView;
+    private Spinner spVideoFormatFormat;
+    private Spinner spVideoFormatResolution;
+    private Spinner spVideoFormatFrameRate;
 
     public VideoFormatDialogFragment(List<Format> formatList, Size size) {
         mFormatList = formatList;
@@ -47,13 +50,16 @@ public class VideoFormatDialogFragment extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        mBinding = FragmentVideoFormatBinding.inflate(getLayoutInflater());
+        mView = getLayoutInflater().inflate(R.layout.fragment_video_format, null);
+        spVideoFormatFormat = mView.findViewById(R.id.spVideoFormatFormat);
+        spVideoFormatResolution = mView.findViewById(R.id.spVideoFormatResolution);
+        spVideoFormatFrameRate = mView.findViewById(R.id.spVideoFormatFrameRate);
 
         updateDialogUI();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
         builder.setTitle(R.string.video_format_title);
-        builder.setView(mBinding.getRoot());
+        builder.setView(mView);
         builder.setPositiveButton(R.string.video_format_ok_button, (dialog, which) -> {
             if (mOnVideoFormatSelectListener != null) {
                 mOnVideoFormatSelectListener.onFormatSelect(mSize);
@@ -109,9 +115,9 @@ public class VideoFormatDialogFragment extends DialogFragment {
         List<String> formatTextList = new ArrayList<>(mTypeAndNameMap.values());
         ArrayAdapter<String> formatAdapter = new ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, formatTextList);
         formatAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mBinding.spVideoFormatFormat.setAdapter(formatAdapter);
+        spVideoFormatFormat.setAdapter(formatAdapter);
         mTypeList = new ArrayList<>(mTypeAndNameMap.keySet());
-        mBinding.spVideoFormatFormat.setSelection(mTypeList.indexOf(mSize.type));
+        spVideoFormatFormat.setSelection(mTypeList.indexOf(mSize.type));
     }
 
     private void refreshResolutionSpinner() {
@@ -119,7 +125,7 @@ public class VideoFormatDialogFragment extends DialogFragment {
         List<String> resolutionTextList = new ArrayList<>(mResolutionMap.keySet());
         ArrayAdapter<String> resolutionAdapter = new ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, resolutionTextList);
         resolutionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mBinding.spVideoFormatResolution.setAdapter(resolutionAdapter);
+        spVideoFormatResolution.setAdapter(resolutionAdapter);
         mResolutionList = new ArrayList<>(mResolutionMap.keySet());
         String resolution = mSize.width + RESOLUTION_SEPARATOR + mSize.height;
         int index = mResolutionList.indexOf(resolution);
@@ -129,25 +135,25 @@ public class VideoFormatDialogFragment extends DialogFragment {
             mSize.width = Integer.parseInt(resolutions[0]);
             mSize.height = Integer.parseInt(resolutions[1]);
         }
-        mBinding.spVideoFormatResolution.setSelection(index);
+        spVideoFormatResolution.setSelection(index);
     }
 
     private void refreshFrameRateSpinner() {
         mFrameRateList = mResolutionMap.get(mSize.width + RESOLUTION_SEPARATOR + mSize.height);
         ArrayAdapter<String> rateAdapter = new ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, mFrameRateList);
         rateAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mBinding.spVideoFormatFrameRate.setAdapter(rateAdapter);
+        spVideoFormatFrameRate.setAdapter(rateAdapter);
         int index = mFrameRateList.indexOf(mSize.fps);
         if (index == -1) {
             index = 0;
             mSize.fps = mFrameRateList.get(index);
         }
-        mBinding.spVideoFormatFrameRate.setSelection(index);
+        spVideoFormatFrameRate.setSelection(index);
     }
 
     private void setListeners() {
         // Set listener of Format
-        mBinding.spVideoFormatFormat.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        spVideoFormatFormat.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 int selectType = mTypeList.get(position);
@@ -164,7 +170,7 @@ public class VideoFormatDialogFragment extends DialogFragment {
             }
         });
         // Set listener of Resolution
-        mBinding.spVideoFormatResolution.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        spVideoFormatResolution.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String[] resolutions = mResolutionList.get(position).split(RESOLUTION_SEPARATOR);
@@ -183,7 +189,7 @@ public class VideoFormatDialogFragment extends DialogFragment {
             }
         });
         // Set listener of Format Rate
-        mBinding.spVideoFormatFrameRate.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        spVideoFormatFrameRate.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 int fps = mFrameRateList.get(position);

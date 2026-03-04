@@ -9,11 +9,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.herohan.uvcapp.ICameraHelper;
 import com.herohan.uvcapp.R;
 import com.herohan.uvcapp.adapter.DeviceItemRecyclerViewAdapter;
-import com.herohan.uvcapp.databinding.FragmentDeviceListBinding;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -25,7 +25,9 @@ public class DeviceListDialogFragment extends DialogFragment {
 
     private OnDeviceItemSelectListener mOnDeviceItemSelectListener;
 
-    private FragmentDeviceListBinding mBinding;
+    private View mView;
+    private RecyclerView rvDeviceList;
+    private View tvEmptyTip;
 
     public DeviceListDialogFragment(ICameraHelper cameraHelper, UsbDevice usbDevice) {
         mCameraHelperWeak = new WeakReference<>(cameraHelper);
@@ -35,12 +37,15 @@ public class DeviceListDialogFragment extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        mBinding = FragmentDeviceListBinding.inflate(getLayoutInflater());
+        mView = getLayoutInflater().inflate(R.layout.fragment_device_list, null);
+        rvDeviceList = mView.findViewById(R.id.rvDeviceList);
+        tvEmptyTip = mView.findViewById(R.id.tvEmptyTip);
+
         initDeviceList();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
         builder.setTitle(R.string.device_list_dialog_title);
-        builder.setView(mBinding.getRoot());
+        builder.setView(mView);
         builder.setNegativeButton(R.string.device_list_cancel_button, (dialog, which) -> {
             dismiss();
         });
@@ -51,14 +56,14 @@ public class DeviceListDialogFragment extends DialogFragment {
         if (mCameraHelperWeak.get() != null) {
             List<UsbDevice> list = mCameraHelperWeak.get().getDeviceList();
             if (list == null || list.size() == 0) {
-                mBinding.rvDeviceList.setVisibility(View.GONE);
-                mBinding.tvEmptyTip.setVisibility(View.VISIBLE);
+                rvDeviceList.setVisibility(View.GONE);
+                tvEmptyTip.setVisibility(View.VISIBLE);
             } else {
-                mBinding.rvDeviceList.setVisibility(View.VISIBLE);
-                mBinding.tvEmptyTip.setVisibility(View.GONE);
+                rvDeviceList.setVisibility(View.VISIBLE);
+                tvEmptyTip.setVisibility(View.GONE);
 
                 DeviceItemRecyclerViewAdapter adapter = new DeviceItemRecyclerViewAdapter(list, mUsbDevice);
-                mBinding.rvDeviceList.setAdapter(adapter);
+                rvDeviceList.setAdapter(adapter);
 
                 adapter.setOnItemClickListener((itemView, position) -> {
                     if (mOnDeviceItemSelectListener != null) {

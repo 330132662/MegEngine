@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
-import com.herohan.uvcapp.databinding.FragmentDeviceItemBinding;
+import com.herohan.uvcapp.R;
 
 import java.util.List;
 
@@ -29,7 +29,8 @@ public class DeviceItemRecyclerViewAdapter extends RecyclerView.Adapter<DeviceIt
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ViewHolder(FragmentDeviceItemBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_device_item, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override
@@ -61,12 +62,12 @@ public class DeviceItemRecyclerViewAdapter extends RecyclerView.Adapter<DeviceIt
         public final TextView tvDeviceName;
         public UsbDevice mItem;
 
-        public ViewHolder(FragmentDeviceItemBinding binding) {
-            super(binding.getRoot());
-            mRootView = binding.getRoot();
-            rbDeviceSelected = binding.rbDeviceSelected;
-            tvProductName = binding.tvProductName;
-            tvDeviceName = binding.tvDeviceName;
+        public ViewHolder(View view) {
+            super(view);
+            mRootView = view;
+            rbDeviceSelected = view.findViewById(R.id.rbDeviceSelected);
+            tvProductName = view.findViewById(R.id.tvProductName);
+            tvDeviceName = view.findViewById(R.id.tvDeviceName);
         }
     }
 

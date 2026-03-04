@@ -19,6 +19,16 @@ q1 为什么不用度目类的离线对比？
 人脸特征值无法同步  ，且很多Android主板不兼容；
 q2 为什么不用百度的云端对比？  
 有几个项目在用，响应不如离线对比快 ；
+## 直接引用本工程注意  
+需要  ViewBinding 移除  使用我的专属分支 即可 
+## AGP9+ 注意   
+AGP 9 AAR 依赖问题 （也可降级到8.x）
+由于 AGP 9 不允许 library 模块使用本地 .aar 文件依赖，采用了以下解决方案：
+- 将 faceks/libs/*.aar 发布到本地 Maven 仓库 (~/.m2/repository)
+- 在 maven.gradle 中添加 mavenLocal() 仓库配置
+- 在 faceks/build.gradle 中使用 Maven 坐标引用 aar：
+ - com.example.facepass:facepass-release:1.0.0
+ - com.serenegiant.uvccamera:libuvccamera-release:1.0.0
 
 
 

@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.TextureView;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -29,7 +30,6 @@ import com.herohan.uvcapp.ICameraHelper;
 import com.herohan.uvcapp.ImageCapture;
 import com.herohan.uvcapp.R;
 import com.herohan.uvcapp.VideoCapture;
-import com.herohan.uvcapp.databinding.ActivityMainBinding;
 import com.herohan.uvcapp.fragment.CameraControlsDialogFragment;
 import com.herohan.uvcapp.fragment.DeviceListDialogFragment;
 import com.herohan.uvcapp.fragment.RecognizePopDialog;
@@ -44,6 +44,7 @@ import com.serenegiant.usb.IButtonCallback;
 import com.serenegiant.usb.Size;
 import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.utils.UriHelper;
+import com.serenegiant.widget.AspectRatioTextureView;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -56,8 +57,6 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TAG_FACE_PASS = "face_pass";
     private static final boolean DEBUG = true;
-
-    private ActivityMainBinding mBinding;
 
     private static final int QUARTER_SECOND = 250;
     private static final int HALF_SECOND = 500;
@@ -121,14 +120,13 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mBinding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(mBinding.getRoot());
+        setContentView(R.layout.activity_main);
 
-        setSupportActionBar(mBinding.toolbar);
+        setSupportActionBar(findViewById(R.id.toolbar));
 
         mFps.setInterval(1000);
         mFps.addListener(fps -> runOnUiThread(() -> {
-            mBinding.tvFps.setText("FPS:" + fps);
+            ((TextView) findViewById(R.id.tvFps)).setText("FPS:" + fps);
         }));
         checkCameraHelper();
 
@@ -329,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
     }
 
     private void setListeners() {
-        mBinding.buttonRecog.setOnClickListener(v -> {
+        findViewById(R.id.button_recog).setOnClickListener(v -> {
             if (mIsModeling) {
                 mFacePass.StartRecog();
                 mIsRecog = true;
@@ -346,14 +344,14 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
             }
         });
 
-        mBinding.buttonPause.setOnClickListener(v -> {
+        findViewById(R.id.button_pause).setOnClickListener(v -> {
             mFacePass.PauseRecog();
             mIsRecog = false;
             mIsIdle = true;
             mIsRegister = false;
         });
 
-        mBinding.ota.setOnClickListener(v -> {
+        findViewById(R.id.ota).setOnClickListener(v -> {
             mFacePass.PauseRecog();
             mIsRecog = false;
             mIsIdle = true;
@@ -385,7 +383,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
             });
         });
 
-        mBinding.buttonFace.setOnClickListener(v -> {
+        findViewById(R.id.button_face).setOnClickListener(v -> {
 //            开始录入
             mFacePass.PauseRecog();
             int faceid = mUserManager.getLastId();
@@ -400,7 +398,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
             }
         });
 
-        mBinding.buttonPalm.setOnClickListener(v -> {
+        findViewById(R.id.button_palm).setOnClickListener(v -> {
             mFacePass.PauseRecog();
             int faceid = mUserManager.getLastId();
             if (faceid == 0) {
@@ -414,7 +412,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
             }
         });
 
-        mBinding.buttonDel.setOnClickListener(v -> {
+        findViewById(R.id.button_del).setOnClickListener(v -> {
             int ret = mFacePass.RemoveAllUsers();
             if (ret < 0) {
                 Log.v(TAG_FACE_PASS, "delet remote user failed");
@@ -537,8 +535,9 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
     }
 
     private void initPreviewView() {
-        mBinding.viewMainPreview.setAspectRatio(mPreviewWidth, mPreviewHeight);
-        mBinding.viewMainPreview.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+        AspectRatioTextureView viewMainPreview = findViewById(R.id.viewMainPreview);
+        viewMainPreview.setAspectRatio(mPreviewWidth, mPreviewHeight);
+        viewMainPreview.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
             public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
                 if (mCameraHelper != null) {
@@ -564,7 +563,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
             }
         });
 
-        mBinding.btnSync.setOnClickListener(v -> doSync());
+        findViewById(R.id.btn_sync).setOnClickListener(v -> doSync());
     }
 
     /**
@@ -574,7 +573,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
      */
     private void doSync() {
         // 获取 face_id
-        String faceIdStr = mBinding.tvFaceid.getText().toString();
+        String faceIdStr = ((androidx.appcompat.widget.AppCompatEditText) findViewById(R.id.tv_faceid)).getText().toString();
         if (TextUtils.isEmpty(faceIdStr)) {
             Toast.makeText(this, "请输入 face_id", Toast.LENGTH_SHORT).show();
             return;
@@ -582,7 +581,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
         int faceId = Integer.parseInt(faceIdStr);
 
         // 获取 Base64 编码的特征值
-        String base64Ft = mBinding.tvFt.getText().toString().trim();
+        String base64Ft = ((androidx.appcompat.widget.AppCompatEditText) findViewById(R.id.tv_ft)).getText().toString().trim();
         if (TextUtils.isEmpty(base64Ft)) {
             Toast.makeText(this, "请输入特征值（Base64 格式）", Toast.LENGTH_SHORT).show();
             Log.e(TAG, "doSync: empty feature string");
@@ -677,7 +676,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                 public void run() {
                     // 在主线程执行
                     // Toast.makeText(getApplicationContext(), String.format("%s 比对成功",user_data.name), Toast.LENGTH_SHORT).show();
-                    mRecognizeDialog.setType(RecognizePopDialog.BG_BLUE | RecognizePopDialog.TITLE_PASS | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{String.format("%s 比对成功", user_data.name)}).show(mBinding.rlContainer);
+                    mRecognizeDialog.setType(RecognizePopDialog.BG_BLUE | RecognizePopDialog.TITLE_PASS | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{String.format("%s 比对成功", user_data.name)}).show(findViewById(R.id.rl_container));
                 }
             });
         } else {
@@ -686,7 +685,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                     @Override
                     public void run() {
                         // 在主线程执行
-                        mRecognizeDialog.setType(RecognizePopDialog.BG_RED | RecognizePopDialog.TITLE_NO_PERMISSION | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"算法未授权"}).show(mBinding.rlContainer);
+                        mRecognizeDialog.setType(RecognizePopDialog.BG_RED | RecognizePopDialog.TITLE_NO_PERMISSION | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"算法未授权"}).show(findViewById(R.id.rl_container));
                     }
                 });
             }
@@ -695,7 +694,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                     @Override
                     public void run() {
                         // 在主线程执行
-                        mRecognizeDialog.setType(RecognizePopDialog.BG_YELLOW | RecognizePopDialog.TITLE_NO_LIVES | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"图像异常"}).show(mBinding.rlContainer);
+                        mRecognizeDialog.setType(RecognizePopDialog.BG_YELLOW | RecognizePopDialog.TITLE_NO_LIVES | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"图像异常"}).show(findViewById(R.id.rl_container));
                     }
                 });
             }
@@ -705,7 +704,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                     @Override
                     public void run() {
                         // 在主线程执行
-                        mRecognizeDialog.setType(RecognizePopDialog.BG_YELLOW | RecognizePopDialog.TITLE_NO_LIVES | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"图像过曝"}).show(mBinding.rlContainer);
+                        mRecognizeDialog.setType(RecognizePopDialog.BG_YELLOW | RecognizePopDialog.TITLE_NO_LIVES | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"图像过曝"}).show(findViewById(R.id.rl_container));
                     }
                 });
             }
@@ -714,7 +713,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                     @Override
                     public void run() {
                         // 在主线程执行
-                        mRecognizeDialog.setType(RecognizePopDialog.BG_YELLOW | RecognizePopDialog.TITLE_NO_LIVES | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"活体攻击"}).show(mBinding.rlContainer);
+                        mRecognizeDialog.setType(RecognizePopDialog.BG_YELLOW | RecognizePopDialog.TITLE_NO_LIVES | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"活体攻击"}).show(findViewById(R.id.rl_container));
                     }
                 });
             }
@@ -722,7 +721,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mRecognizeDialog.setType(RecognizePopDialog.BG_YELLOW | RecognizePopDialog.TITLE_NO_AUTH_FAIL | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"比对失败! score:" + iden_score}).show(mBinding.rlContainer);
+                        mRecognizeDialog.setType(RecognizePopDialog.BG_YELLOW | RecognizePopDialog.TITLE_NO_AUTH_FAIL | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"比对失败! score:" + iden_score}).show(findViewById(R.id.rl_container));
                     }
                 });
             }
@@ -731,7 +730,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                     @Override
                     public void run() {
                         // 在主线程执行
-                        mRecognizeDialog.setType(RecognizePopDialog.BG_YELLOW | RecognizePopDialog.TITLE_NO_AUTH_FAIL | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"请调整位置"}).show(mBinding.rlContainer);
+                        mRecognizeDialog.setType(RecognizePopDialog.BG_YELLOW | RecognizePopDialog.TITLE_NO_AUTH_FAIL | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"请调整位置"}).show(findViewById(R.id.rl_container));
                     }
                 });
             }
@@ -741,7 +740,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                     @Override
                     public void run() {
                         // 在主线程执行
-                        mRecognizeDialog.setType(RecognizePopDialog.BG_YELLOW | RecognizePopDialog.TITLE_NO_AUTH_FAIL | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"请调整姿势"}).show(mBinding.rlContainer);
+                        mRecognizeDialog.setType(RecognizePopDialog.BG_YELLOW | RecognizePopDialog.TITLE_NO_AUTH_FAIL | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{"请调整姿势"}).show(findViewById(R.id.rl_container));
                     }
                 });
             }
@@ -765,7 +764,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                     @Override
                     public void run() {
                         // 在主线程执行
-                        mRecognizeDialog.setType(RecognizePopDialog.BG_BLUE | RecognizePopDialog.TITLE_PASS | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{String.format("底库保存异常")}).show(mBinding.rlContainer);
+                        mRecognizeDialog.setType(RecognizePopDialog.BG_BLUE | RecognizePopDialog.TITLE_PASS | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{String.format("底库保存异常")}).show(findViewById(R.id.rl_container));
                     }
                 });
             } else {
@@ -780,10 +779,10 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                     @Override
                     public void run() {
                         // 在主线程执行
-                        mRecognizeDialog.setType(RecognizePopDialog.BG_BLUE | RecognizePopDialog.TITLE_PASS | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{String.format("录入成功\n特征值已复制到剪贴板")}).show(mBinding.rlContainer);
+                        mRecognizeDialog.setType(RecognizePopDialog.BG_BLUE | RecognizePopDialog.TITLE_PASS | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{String.format("录入成功\n特征值已复制到剪贴板")}).show(findViewById(R.id.rl_container));
 
                         // 将 Base64 特征值显示到输入框，方便复制
-                        mBinding.tvFt.setText(base64Ft);
+                        ((androidx.appcompat.widget.AppCompatEditText) findViewById(R.id.tv_ft)).setText(base64Ft);
 
                         // 同时复制到剪贴板
                         android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
@@ -798,7 +797,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                     @Override
                     public void run() {
                         // 在主线程执行
-                        mRecognizeDialog.setType(RecognizePopDialog.BG_BLUE | RecognizePopDialog.TITLE_PASS | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{String.format("请调整姿势")}).show(mBinding.rlContainer);
+                        mRecognizeDialog.setType(RecognizePopDialog.BG_BLUE | RecognizePopDialog.TITLE_PASS | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{String.format("请调整姿势")}).show(findViewById(R.id.rl_container));
 
                     }
                 });
@@ -807,7 +806,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                     @Override
                     public void run() {
                         // 在主线程执行
-                        mRecognizeDialog.setType(RecognizePopDialog.BG_BLUE | RecognizePopDialog.TITLE_PASS | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{String.format("录入失败")}).show(mBinding.rlContainer);
+                        mRecognizeDialog.setType(RecognizePopDialog.BG_BLUE | RecognizePopDialog.TITLE_PASS | RecognizePopDialog.BODY_SHOW_TEXT).setMessage(new String[]{String.format("录入失败")}).show(findViewById(R.id.rl_container));
 
                     }
                 });
@@ -877,8 +876,9 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                 resizePreviewView(size);
             }
 
-            if (mBinding.viewMainPreview.getSurfaceTexture() != null) {
-                mCameraHelper.addSurface(mBinding.viewMainPreview.getSurfaceTexture(), false);
+            AspectRatioTextureView viewMainPreview = findViewById(R.id.viewMainPreview);
+            if (viewMainPreview.getSurfaceTexture() != null) {
+                mCameraHelper.addSurface(viewMainPreview.getSurfaceTexture(), false);
             }
 
             mIsCameraConnected = true;
@@ -902,8 +902,9 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                 toggleVideoRecord(false);
             }
 
-            if (mCameraHelper != null && mBinding.viewMainPreview.getSurfaceTexture() != null) {
-                mCameraHelper.removeSurface(mBinding.viewMainPreview.getSurfaceTexture());
+            AspectRatioTextureView viewMainPreview = findViewById(R.id.viewMainPreview);
+            if (mCameraHelper != null && viewMainPreview.getSurfaceTexture() != null) {
+                mCameraHelper.removeSurface(viewMainPreview.getSurfaceTexture());
             }
 
             mIsCameraConnected = false;
@@ -944,17 +945,17 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
         mPreviewWidth = size.width;
         mPreviewHeight = size.height;
         // Set the aspect ratio of TextureView to match the aspect ratio of the camera
-        mBinding.viewMainPreview.setAspectRatio(mPreviewWidth, mPreviewHeight);
+        ((AspectRatioTextureView) findViewById(R.id.viewMainPreview)).setAspectRatio(mPreviewWidth, mPreviewHeight);
     }
 
     private void updateUIControls() {
         runOnUiThread(() -> {
             if (mIsCameraConnected) {
-                mBinding.viewMainPreview.setVisibility(View.VISIBLE);
-                mBinding.tvConnectUSBCameraTip.setVisibility(View.GONE);
+                findViewById(R.id.viewMainPreview).setVisibility(View.VISIBLE);
+                findViewById(R.id.tvConnectUSBCameraTip).setVisibility(View.GONE);
 
-                mBinding.fabPicture.setVisibility(View.GONE);
-                mBinding.fabVideo.setVisibility(View.GONE);
+                findViewById(R.id.fabPicture).setVisibility(View.GONE);
+                findViewById(R.id.fabVideo).setVisibility(View.GONE);
 
                 // Update record button
                 int colorId = R.color.WHITE;
@@ -962,16 +963,16 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
                     colorId = R.color.RED;
                 }
                 ColorStateList colorStateList = ColorStateList.valueOf(getResources().getColor(colorId));
-                mBinding.fabVideo.setSupportImageTintList(colorStateList);
+                ((com.google.android.material.floatingactionbutton.FloatingActionButton) findViewById(R.id.fabVideo)).setSupportImageTintList(colorStateList);
 
             } else {
-                mBinding.viewMainPreview.setVisibility(View.GONE);
-                mBinding.tvConnectUSBCameraTip.setVisibility(View.VISIBLE);
+                findViewById(R.id.viewMainPreview).setVisibility(View.GONE);
+                findViewById(R.id.tvConnectUSBCameraTip).setVisibility(View.VISIBLE);
 
-                mBinding.fabPicture.setVisibility(View.GONE);
-                mBinding.fabVideo.setVisibility(View.GONE);
+                findViewById(R.id.fabPicture).setVisibility(View.GONE);
+                findViewById(R.id.fabVideo).setVisibility(View.GONE);
 
-                mBinding.tvVideoRecordTime.setVisibility(View.GONE);
+                findViewById(R.id.tvVideoRecordTime).setVisibility(View.GONE);
             }
             invalidateOptionsMenu();
         });
@@ -1083,7 +1084,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
     }
 
     private void startRecordTimer() {
-        runOnUiThread(() -> mBinding.tvVideoRecordTime.setVisibility(View.VISIBLE));
+        runOnUiThread(() -> findViewById(R.id.tvVideoRecordTime).setVisibility(View.VISIBLE));
 
         // Set “00:00:00” to record time TextView
         setVideoRecordTimeText(formatTime(0));
@@ -1104,7 +1105,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
     }
 
     private void stopRecordTimer() {
-        runOnUiThread(() -> mBinding.tvVideoRecordTime.setVisibility(View.GONE));
+        runOnUiThread(() -> findViewById(R.id.tvVideoRecordTime).setVisibility(View.GONE));
 
         // Stop Record Timer
         mRecordStartTime = 0;
@@ -1118,7 +1119,7 @@ public class MainActivity extends AppCompatActivity implements NativeLib.facePas
 
     private void setVideoRecordTimeText(String timeText) {
         runOnUiThread(() -> {
-            mBinding.tvVideoRecordTime.setText(timeText);
+            ((TextView) findViewById(R.id.tvVideoRecordTime)).setText(timeText);
         });
     }
 

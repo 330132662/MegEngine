@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.RadioGroup;
 
@@ -15,7 +16,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.herohan.uvcapp.ICameraHelper;
-import com.herohan.uvcapp.databinding.FragmentCameraControlsBinding;
 import com.serenegiant.usb.UVCControl;
 import com.herohan.uvcapp.R;
 import com.warkiz.widget.IndicatorSeekBar;
@@ -27,7 +27,31 @@ public class CameraControlsDialogFragment extends DialogFragment {
 
     private WeakReference<ICameraHelper> mCameraHelperWeak;
 
-    private FragmentCameraControlsBinding mBinding;
+    private View mView;
+    private Button btnCameraControlsCancel;
+    private Button btnCameraControlsReset;
+    private IndicatorSeekBar isbBrightness;
+    private IndicatorSeekBar isbContrast;
+    private CheckBox cbContrastAuto;
+    private IndicatorSeekBar isbHue;
+    private CheckBox cbHueAuto;
+    private IndicatorSeekBar isbSaturation;
+    private IndicatorSeekBar isbSharpness;
+    private IndicatorSeekBar isbGamma;
+    private IndicatorSeekBar isbWhiteBalance;
+    private CheckBox cbWhiteBalanceAuto;
+    private IndicatorSeekBar isbBacklightComp;
+    private IndicatorSeekBar isbGain;
+    private IndicatorSeekBar isbExposureTime;
+    private CheckBox cbExposureTimeAuto;
+    private IndicatorSeekBar isbIris;
+    private IndicatorSeekBar isbFocus;
+    private CheckBox cbFocusAuto;
+    private IndicatorSeekBar isbZoom;
+    private IndicatorSeekBar isbPan;
+    private IndicatorSeekBar isbTilt;
+    private IndicatorSeekBar isbRoll;
+    private RadioGroup rgPowerLineFrequency;
 
     public CameraControlsDialogFragment(ICameraHelper cameraHelper) {
         mCameraHelperWeak = new WeakReference<>(cameraHelper);
@@ -50,9 +74,36 @@ public class CameraControlsDialogFragment extends DialogFragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        mBinding = FragmentCameraControlsBinding.inflate(getLayoutInflater(), container, false);
+        mView = inflater.inflate(R.layout.fragment_camera_controls, container, false);
+
+        // Find all views
+        btnCameraControlsCancel = mView.findViewById(R.id.btnCameraControlsCancel);
+        btnCameraControlsReset = mView.findViewById(R.id.btnCameraControlsReset);
+        isbBrightness = mView.findViewById(R.id.isbBrightness);
+        isbContrast = mView.findViewById(R.id.isbContrast);
+        cbContrastAuto = mView.findViewById(R.id.cbContrastAuto);
+        isbHue = mView.findViewById(R.id.isbHue);
+        cbHueAuto = mView.findViewById(R.id.cbHueAuto);
+        isbSaturation = mView.findViewById(R.id.isbSaturation);
+        isbSharpness = mView.findViewById(R.id.isbSharpness);
+        isbGamma = mView.findViewById(R.id.isbGamma);
+        isbWhiteBalance = mView.findViewById(R.id.isbWhiteBalance);
+        cbWhiteBalanceAuto = mView.findViewById(R.id.cbWhiteBalanceAuto);
+        isbBacklightComp = mView.findViewById(R.id.isbBacklightComp);
+        isbGain = mView.findViewById(R.id.isbGain);
+        isbExposureTime = mView.findViewById(R.id.isbExposureTime);
+        cbExposureTimeAuto = mView.findViewById(R.id.cbExposureTimeAuto);
+        isbIris = mView.findViewById(R.id.isbIris);
+        isbFocus = mView.findViewById(R.id.isbFocus);
+        cbFocusAuto = mView.findViewById(R.id.cbFocusAuto);
+        isbZoom = mView.findViewById(R.id.isbZoom);
+        isbPan = mView.findViewById(R.id.isbPan);
+        isbTilt = mView.findViewById(R.id.isbTilt);
+        isbRoll = mView.findViewById(R.id.isbRoll);
+        rgPowerLineFrequency = mView.findViewById(R.id.rgPowerLineFrequency);
+
         setButtonListeners();
-        return mBinding.getRoot();
+        return mView;
     }
 
     @Override
@@ -63,10 +114,10 @@ public class CameraControlsDialogFragment extends DialogFragment {
     }
 
     private void setButtonListeners() {
-        mBinding.btnCameraControlsCancel.setOnClickListener(v -> {
+        btnCameraControlsCancel.setOnClickListener(v -> {
             dismiss();
         });
-        mBinding.btnCameraControlsReset.setOnClickListener(v -> {
+        btnCameraControlsReset.setOnClickListener(v -> {
             ICameraHelper cameraHelper = mCameraHelperWeak.get();
             if (cameraHelper == null || cameraHelper.getUVCControl() == null) {
                 return;
@@ -102,159 +153,159 @@ public class CameraControlsDialogFragment extends DialogFragment {
     private void setAllControlParams(UVCControl control) {
         // Brightness
         setSeekBarParams(
-                mBinding.isbBrightness,
+                isbBrightness,
                 control.isBrightnessEnable(),
                 control.updateBrightnessLimit(),
                 control.getBrightness());
 
         // Contrast
         setSeekBarParams(
-                mBinding.isbContrast,
+                isbContrast,
                 control.isContrastEnable(),
                 control.updateContrastLimit(),
                 control.getContrast());
         if (control.isContrastAutoEnable()) {
-            mBinding.isbContrast.setEnabled(false);
+            isbContrast.setEnabled(false);
         }
         // Contrast Auto
         setCheckBoxParams(
-                mBinding.cbContrastAuto,
+                cbContrastAuto,
                 control.isContrastAutoEnable(),
                 control.getContrastAuto());
 
         // Hue
         setSeekBarParams(
-                mBinding.isbHue,
+                isbHue,
                 control.isHueEnable(),
                 control.updateHueLimit(),
                 control.getHue());
         if (control.isHueAutoEnable()) {
-            mBinding.isbHue.setEnabled(false);
+            isbHue.setEnabled(false);
         }
         // Hue Auto
         setCheckBoxParams(
-                mBinding.cbHueAuto,
+                cbHueAuto,
                 control.isHueAutoEnable(),
                 control.getHueAuto());
 
         // Saturation
         setSeekBarParams(
-                mBinding.isbSaturation,
+                isbSaturation,
                 control.isSaturationEnable(),
                 control.updateSaturationLimit(),
                 control.getSaturation());
 
         // Sharpness
         setSeekBarParams(
-                mBinding.isbSharpness,
+                isbSharpness,
                 control.isSharpnessEnable(),
                 control.updateSharpnessLimit(),
                 control.getSharpness());
 
         // Gamma
         setSeekBarParams(
-                mBinding.isbGamma,
+                isbGamma,
                 control.isGammaEnable(),
                 control.updateGammaLimit(),
                 control.getGamma());
 
         // White Balance
         setSeekBarParams(
-                mBinding.isbWhiteBalance,
+                isbWhiteBalance,
                 control.isWhiteBalanceEnable(),
                 control.updateWhiteBalanceLimit(),
                 control.getWhiteBalance());
         if (control.isWhiteBalanceAutoEnable()) {
-            mBinding.isbWhiteBalance.setEnabled(false);
+            isbWhiteBalance.setEnabled(false);
         }
         // White Balance Auto
         setCheckBoxParams(
-                mBinding.cbWhiteBalanceAuto,
+                cbWhiteBalanceAuto,
                 control.isWhiteBalanceAutoEnable(),
                 control.getWhiteBalanceAuto());
 
         // Backlight Compensation
         setSeekBarParams(
-                mBinding.isbBacklightComp,
+                isbBacklightComp,
                 control.isBacklightCompEnable(),
                 control.updateBacklightCompLimit(),
                 control.getBacklightComp());
 
         // Gain
         setSeekBarParams(
-                mBinding.isbGain,
+                isbGain,
                 control.isGainEnable(),
                 control.updateGainLimit(),
                 control.getGain());
 
         // Exposure Time
         setSeekBarParams(
-                mBinding.isbExposureTime,
+                isbExposureTime,
                 control.isExposureTimeAbsoluteEnable(),
                 control.updateExposureTimeAbsoluteLimit(),
                 control.getExposureTimeAbsolute());
         if (control.isAutoExposureModeEnable()) {
-            mBinding.isbExposureTime.setEnabled(false);
+            isbExposureTime.setEnabled(false);
         }
         // Auto-Exposure Mode
         setCheckBoxParams(
-                mBinding.cbExposureTimeAuto,
+                cbExposureTimeAuto,
                 control.isAutoExposureModeEnable(),
                 control.isExposureTimeAuto());
 
         // Iris
         setSeekBarParams(
-                mBinding.isbIris,
+                isbIris,
                 control.isIrisAbsoluteEnable(),
                 control.updateIrisAbsoluteLimit(),
                 control.getIrisAbsolute());
 
         // Focus
         setSeekBarParams(
-                mBinding.isbFocus,
+                isbFocus,
                 control.isFocusAbsoluteEnable(),
                 control.updateFocusAbsoluteLimit(),
                 control.getFocusAbsolute());
         if (control.isFocusAutoEnable()) {
-            mBinding.isbFocus.setEnabled(false);
+            isbFocus.setEnabled(false);
         }
         // Focus Auto
         setCheckBoxParams(
-                mBinding.cbFocusAuto,
+                cbFocusAuto,
                 control.isFocusAutoEnable(),
                 control.getFocusAuto());
 
         // Zoom
         setSeekBarParams(
-                mBinding.isbZoom,
+                isbZoom,
                 control.isZoomAbsoluteEnable(),
                 control.updateZoomAbsoluteLimit(),
                 control.getZoomAbsolute());
 
         // Pan
         setSeekBarParams(
-                mBinding.isbPan,
+                isbPan,
                 control.isPanAbsoluteEnable(),
                 control.updatePanAbsoluteLimit(),
                 control.getPanAbsolute());
 
         // Tilt
         setSeekBarParams(
-                mBinding.isbTilt,
+                isbTilt,
                 control.isTiltAbsoluteEnable(),
                 control.updateTiltAbsoluteLimit(),
                 control.getTiltAbsolute());
 
         // Roll
         setSeekBarParams(
-                mBinding.isbRoll,
+                isbRoll,
                 control.isRollAbsoluteEnable(),
                 control.updateRollAbsoluteLimit(),
                 control.getRollAbsolute());
 
         // Power Line Frequency
         setPowerLineFrequencyRadioGroup(
-                mBinding.rgPowerLineFrequency,
+                rgPowerLineFrequency,
                 control.isPowerlineFrequencyEnable(),
                 control.updatePowerlineFrequencyLimit(),
                 control.getPowerlineFrequency());
@@ -262,149 +313,149 @@ public class CameraControlsDialogFragment extends DialogFragment {
 
     private void setAllControlChangeListener(UVCControl controls) {
         // Brightness
-        mBinding.isbBrightness.setOnSeekChangeListener(
+        isbBrightness.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setBrightness(seekParams.progress));
 
         // Contrast
-        mBinding.isbContrast.setOnSeekChangeListener(
+        isbContrast.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setContrast(seekParams.progress));
         // Contrast Auto
-        mBinding.cbContrastAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        cbContrastAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 // Before enable Contrast Auto, must reset Contrast
                 controls.resetContrast();
                 setSeekBarParams(
-                        mBinding.isbContrast,
+                        isbContrast,
                         controls.isContrastEnable(),
                         controls.updateContrastLimit(),
                         controls.getContrast());
-                mBinding.isbContrast.setEnabled(false);
+                isbContrast.setEnabled(false);
             } else {
-                mBinding.isbContrast.setEnabled(true);
+                isbContrast.setEnabled(true);
             }
             controls.setContrastAuto(isChecked);
         });
 
         // Hue
-        mBinding.isbHue.setOnSeekChangeListener(
+        isbHue.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setHue(seekParams.progress));
         // Hue Auto
-        mBinding.cbHueAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        cbHueAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 // Before enable Hue Auto, must reset Hue
                 controls.resetHue();
                 setSeekBarParams(
-                        mBinding.isbHue,
+                        isbHue,
                         controls.isHueEnable(),
                         controls.updateHueLimit(),
                         controls.getHue());
-                mBinding.isbHue.setEnabled(false);
+                isbHue.setEnabled(false);
             } else {
-                mBinding.isbHue.setEnabled(true);
+                isbHue.setEnabled(true);
             }
             controls.setHueAuto(isChecked);
         });
 
         // Saturation
-        mBinding.isbSaturation.setOnSeekChangeListener(
+        isbSaturation.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setSaturation(seekParams.progress));
         // Sharpness
-        mBinding.isbSharpness.setOnSeekChangeListener(
+        isbSharpness.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setSharpness(seekParams.progress));
         // Gamma
-        mBinding.isbGamma.setOnSeekChangeListener(
+        isbGamma.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setGamma(seekParams.progress));
 
         // White Balance
-        mBinding.isbWhiteBalance.setOnSeekChangeListener(
+        isbWhiteBalance.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setWhiteBalance(seekParams.progress));
         // White Balance Auto
-        mBinding.cbWhiteBalanceAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        cbWhiteBalanceAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 // Before enable White Balance Auto, must reset White Balance
                 controls.resetWhiteBalance();
                 setSeekBarParams(
-                        mBinding.isbWhiteBalance,
+                        isbWhiteBalance,
                         controls.isWhiteBalanceEnable(),
                         controls.updateWhiteBalanceLimit(),
                         controls.getWhiteBalance());
-                mBinding.isbWhiteBalance.setEnabled(false);
+                isbWhiteBalance.setEnabled(false);
             } else {
-                mBinding.isbWhiteBalance.setEnabled(true);
+                isbWhiteBalance.setEnabled(true);
             }
             controls.setWhiteBalanceAuto(isChecked);
         });
 
         // Backlight Compensation
-        mBinding.isbBacklightComp.setOnSeekChangeListener(
+        isbBacklightComp.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setBacklightComp(seekParams.progress));
 
         // Gain
-        mBinding.isbGain.setOnSeekChangeListener(
+        isbGain.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setGain(seekParams.progress));
 
         // Exposure Time
-        mBinding.isbExposureTime.setOnSeekChangeListener(
+        isbExposureTime.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setExposureTimeAbsolute(seekParams.progress));
         // Exposure Time Auto
-        mBinding.cbExposureTimeAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        cbExposureTimeAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 // Before enable Exposure Time Auto, must reset Exposure Time
                 controls.resetExposureTimeAbsolute();
                 setSeekBarParams(
-                        mBinding.isbExposureTime,
+                        isbExposureTime,
                         controls.isExposureTimeAbsoluteEnable(),
                         controls.updateExposureTimeAbsoluteLimit(),
                         controls.getExposureTimeAbsolute());
-                mBinding.isbExposureTime.setEnabled(false);
+                isbExposureTime.setEnabled(false);
             } else {
-                mBinding.isbExposureTime.setEnabled(true);
+                isbExposureTime.setEnabled(true);
             }
             controls.setExposureTimeAuto(isChecked);
         });
 
         // Iris
-        mBinding.isbIris.setOnSeekChangeListener(
+        isbIris.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setIrisAbsolute(seekParams.progress));
 
         // Focus
-        mBinding.isbFocus.setOnSeekChangeListener(
+        isbFocus.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setFocusAbsolute(seekParams.progress));
         // Focus Auto
-        mBinding.cbFocusAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        cbFocusAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 // Before enable Focus Auto, must reset Focus absolute
                 controls.resetFocusAbsolute();
                 setSeekBarParams(
-                        mBinding.isbFocus,
+                        isbFocus,
                         controls.isFocusAbsoluteEnable(),
                         controls.updateFocusAbsoluteLimit(),
                         controls.getFocusAbsolute());
-                mBinding.isbFocus.setEnabled(false);
+                isbFocus.setEnabled(false);
             } else {
-                mBinding.isbFocus.setEnabled(true);
+                isbFocus.setEnabled(true);
             }
             controls.setFocusAuto(isChecked);
         });
 
         // Zoom
-        mBinding.isbZoom.setOnSeekChangeListener(
+        isbZoom.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setZoomAbsolute(seekParams.progress));
 
         // Pan
-        mBinding.isbPan.setOnSeekChangeListener(
+        isbPan.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setPanAbsolute(seekParams.progress));
 
         // Tilt
-        mBinding.isbTilt.setOnSeekChangeListener(
+        isbTilt.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setTiltAbsolute(seekParams.progress));
 
         // Roll
-        mBinding.isbRoll.setOnSeekChangeListener(
+        isbRoll.setOnSeekChangeListener(
                 (MyOnSeekChangeListener) seekParams -> controls.setRollAbsolute(seekParams.progress));
 
         // Power Line Frequency
-        mBinding.rgPowerLineFrequency.setOnCheckedChangeListener((group, checkedId) -> {
+        rgPowerLineFrequency.setOnCheckedChangeListener((group, checkedId) -> {
             int value = 0;
             if (checkedId == R.id.rbPowerLineFrequencyDisable) {
                 value = 0;
